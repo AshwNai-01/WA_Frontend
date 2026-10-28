@@ -32,19 +32,19 @@ function ContactCell({ email, mobile }) {
   );
 }
 
-function EmptyRow({ colSpan, filtered }) {
+function EmptyRow({ colSpan, filtered, emptyText }) {
   return (
     <tr>
       <td colSpan={colSpan} className="px-4 py-14 text-center">
         <Inbox size={36} className="mx-auto text-gray-300" />
-        <p className="mt-2 font-medium text-gray-900">{filtered ? "Nothing with this status" : "No enquiries yet"}</p>
+        <p className="mt-2 font-medium text-gray-900">{filtered ? "Nothing with this status" : emptyText}</p>
         <p className="text-sm text-gray-500">New submissions from the website will appear here.</p>
       </td>
     </tr>
   );
 }
 
-function LeadsTable({ rows, status, onSave }) {
+function LeadsTable({ rows, status, onSave, emptyText }) {
   return (
     <table className="min-w-[900px] w-full divide-y divide-gray-100">
       <thead className="bg-gray-50">
@@ -59,7 +59,7 @@ function LeadsTable({ rows, status, onSave }) {
         </tr>
       </thead>
       <tbody className="divide-y divide-gray-100 bg-white">
-        {rows.length === 0 && <EmptyRow colSpan={7} filtered={Boolean(status)} />}
+        {rows.length === 0 && <EmptyRow colSpan={7} filtered={Boolean(status)} emptyText={emptyText} />}
         {rows.map((l) => (
           <tr key={l._id} className="hover:bg-gray-50/60">
             <td className={`${td} whitespace-nowrap text-gray-500`}>{formatDateTime(l.createdAt)}</td>
@@ -84,7 +84,7 @@ function LeadsTable({ rows, status, onSave }) {
   );
 }
 
-function MessagesTable({ rows, status, onSave }) {
+function MessagesTable({ rows, status, onSave, emptyText }) {
   return (
     <table className="min-w-[860px] w-full divide-y divide-gray-100">
       <thead className="bg-gray-50">
@@ -98,7 +98,7 @@ function MessagesTable({ rows, status, onSave }) {
         </tr>
       </thead>
       <tbody className="divide-y divide-gray-100 bg-white">
-        {rows.length === 0 && <EmptyRow colSpan={6} filtered={Boolean(status)} />}
+        {rows.length === 0 && <EmptyRow colSpan={6} filtered={Boolean(status)} emptyText={emptyText} />}
         {rows.map((m) => (
           <tr key={m._id} className="hover:bg-gray-50/60">
             <td className={`${td} whitespace-nowrap text-gray-500`}>{formatDateTime(m.createdAt)}</td>
@@ -123,22 +123,40 @@ function MessagesTable({ rows, status, onSave }) {
 }
 
 const TABS = {
-  leads: { label: "Quote requests", icon: FileText, statuses: LEAD_STATUSES, fetch: getLeads, update: updateLeadStatus, Table: LeadsTable },
-  messages: { label: "Contact messages", icon: MessageSquare, statuses: MESSAGE_STATUSES, fetch: getMessages, update: updateMessageStatus, Table: MessagesTable },
+  leads: {
+    label: "Quote requests",
+    emptyText: "No quote requests yet",
+    icon: FileText,
+    statuses: LEAD_STATUSES,
+    fetch: getLeads,
+    update: updateLeadStatus,
+    Table: LeadsTable,
+  },
+  messages: {
+    label: "Contact messages",
+    emptyText: "No contact messages yet",
+    icon: MessageSquare,
+    statuses: MESSAGE_STATUSES,
+    fetch: getMessages,
+    update: updateMessageStatus,
+    Table: MessagesTable,
+  },
 };
 
 // One tab's list. Remounted (key) when the tab changes, so it never shows
 // the other tab's rows while loading.
-function EnquiryPanel({ tab, status, page, onPageChange }) {
+function EnquiryPanel({ tab, status, page, onPageChange, onStatusChanged }) {
   const { data: rows, pagination, loading, error, refetch } = useFetch(
     () => tab.fetch({ status, page, limit: PAGE_SIZE }),
     [status, page]
   );
 
   // Save, then reload the page of results (a row may leave the current status filter)
+  // and the "new" badges on the tabs
   const saveStatus = async (id, nextStatus) => {
     await tab.update(id, nextStatus);
     refetch();
+    onStatusChanged();
   };
 
   const { Table } = tab;
@@ -157,7 +175,7 @@ function EnquiryPanel({ tab, status, page, onPageChange }) {
         ) : (
           // Wide tables scroll sideways inside this box on small screens, not the whole page
           <div className={`overflow-x-auto rounded-2xl ring-1 ring-black/5 transition-opacity ${loading ? "opacity-60" : ""}`}>
-            <Table rows={rows} status={status} onSave={saveStatus} />
+            <Table rows={rows} status={status} onSave={saveStatus} emptyText={tab.emptyText} />
           </div>
         )}
       </div>
@@ -179,6 +197,16 @@ export default function AdminDashboard() {
   const tab = TABS[tabKey];
   const status = tab.statuses.includes(searchParams.get("status")) ? searchParams.get("status") : "";
   const page = Math.max(Number(searchParams.get("page")) || 1, 1);
+
+  // Number of "new" items per tab, shown as a badge so nothing waits unseen on the other tab.
+  // limit=1: only pagination.total is needed.
+  const newLeads = useFetch(() => getLeads({ status: "new", limit: 1 }), []);
+  const newMessages = useFetch(() => getMessages({ status: "new", limit: 1 }), []);
+  const newCounts = { leads: newLeads.pagination?.total ?? 0, messages: newMessages.pagination?.total ?? 0 };
+  const refreshCounts = () => {
+    newLeads.refetch();
+    newMessages.refetch();
+  };
 
   useEffect(() => {
     const previous = document.title;
@@ -216,6 +244,16 @@ export default function AdminDashboard() {
               }`}
             >
               <t.icon size={16} /> {t.label}
+              {newCounts[key] > 0 && (
+                <span
+                  className={`min-w-5 rounded-full px-1.5 py-0.5 text-[11px] font-bold leading-none ${
+                    key === tabKey ? "bg-white text-plum" : "bg-plum text-white"
+                  }`}
+                  aria-label={`${newCounts[key]} new`}
+                >
+                  {newCounts[key]}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -243,6 +281,7 @@ export default function AdminDashboard() {
         status={status}
         page={page}
         onPageChange={(p) => setParams({ tab: tabParam, status, page: p > 1 ? String(p) : "" })}
+        onStatusChanged={refreshCounts}
       />
     </section>
   );
