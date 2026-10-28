@@ -11,6 +11,7 @@ import { useCallback, useEffect, useState } from "react";
  * data       -> body.data from the backend (e.g. the vendors array)
  * pagination -> body.pagination, when the endpoint has it
  * error      -> a message that is safe to show in the UI
+ * errorStatus -> HTTP status of the failure (e.g. 404), undefined for network errors
  * refetch    -> call it from a "Try again" button
  */
 export default function useFetch(fetcher, deps = []) {
@@ -18,6 +19,7 @@ export default function useFetch(fetcher, deps = []) {
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [errorStatus, setErrorStatus] = useState(undefined);
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
@@ -27,6 +29,7 @@ export default function useFetch(fetcher, deps = []) {
 
     setLoading(true);
     setError(null);
+    setErrorStatus(undefined);
 
     fetcher()
       .then((body) => {
@@ -35,7 +38,9 @@ export default function useFetch(fetcher, deps = []) {
         setPagination(body.pagination ?? null);
       })
       .catch((err) => {
-        if (!ignore) setError(err.message);
+        if (ignore) return;
+        setError(err.message);
+        setErrorStatus(err.status);
       })
       .finally(() => {
         if (!ignore) setLoading(false);
@@ -50,5 +55,5 @@ export default function useFetch(fetcher, deps = []) {
 
   const refetch = useCallback(() => setReloadKey((key) => key + 1), []);
 
-  return { data, pagination, loading, error, refetch };
+  return { data, pagination, loading, error, errorStatus, refetch };
 }

@@ -2,6 +2,7 @@ import { createBrowserRouter } from "react-router-dom";
 import MainLayout from "../modules/common/components/MainLayout";
 import HomePage from "../modules/home/pages/HomePage";
 import VendorsPage from "../modules/vendors/pages/VendorsPage";
+import VendorDetailPage from "../modules/vendors/pages/VendorDetailPage";
 import CityPage from "../modules/cities/pages/CityPage";
 import ContactPage from "../modules/leads/pages/ContactPage";
 import LoginPage from "../modules/auth/pages/LoginPage";
@@ -17,6 +18,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <HomePage /> },
       { path: "vendors", element: <VendorsPage /> },
+      { path: "vendors/:slug", element: <VendorDetailPage /> },
       { path: "event-planner/:slug", element: <CityPage /> },
       { path: "contact", element: <ContactPage /> },
       { path: "login", element: <LoginPage /> },
@@ -26,7 +28,6 @@ const router = createBrowserRouter([
         children: [{ path: "admin", element: <AdminDashboard /> }],
       },
       // Planned pages: placeholders until they are built
-      { path: "vendors/:slug", element: <ComingSoonPage title="Vendor Details" /> },
       { path: "about", element: <ComingSoonPage title="About Us" /> },
       { path: "privacy", element: <ComingSoonPage title="Privacy Policy" /> },
       { path: "terms", element: <ComingSoonPage title="Terms of Use" /> },
