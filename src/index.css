@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+/* Brand colours and fonts, usable as classes like bg-brand, text-plum, font-heading */
+@theme {
+  --color-brand: #e267e2;        /* navbar and footer pink */
+  --color-brand-light: #fbeaf0;  /* soft pink backgrounds */
+  --color-plum: #a3195b;         /* buttons and prices */
+  --color-plum-dark: #7a1244;    /* button hover */
+  --color-cream: #fbf5ef;        /* page background */
+  --color-gold: #f5c84c;         /* PRIME badge */
+
+  --font-heading: "Cormorant Garamond", serif;
+  --font-body: "Inter", system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-cream font-body text-gray-800 antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-heading;
+  }
+
+  img {
+    @apply max-w-full;
+  }
+}
+
+/* Hero slider: white arrows and dots; arrows only from tablet up (phones swipe) */
+.hero-swiper {
+  --swiper-theme-color: #fff;
+  --swiper-navigation-size: 28px;
+  --swiper-pagination-bullet-inactive-color: #fff;
+  --swiper-pagination-bullet-inactive-opacity: 0.5;
+  --swiper-pagination-bottom: 20px;
+}
+
+.hero-swiper .swiper-button-prev,
+.hero-swiper .swiper-button-next {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .hero-swiper .swiper-button-prev,
+  .hero-swiper .swiper-button-next {
+    display: flex;
+  }
+}
+
+/* Small carousels on the Perfect Places cards */
+.place-swiper {
+  --swiper-theme-color: #fff;
+  --swiper-navigation-size: 18px;
+  --swiper-pagination-bullet-inactive-color: #fff;
+  --swiper-pagination-bullet-inactive-opacity: 0.6;
+  --swiper-pagination-bullet-size: 6px;
+}
