@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Heart, Mail, MapPin, Phone } from "lucide-react";
-import { NAV_LINKS, SITE, vendorsUrl } from "../../../utils/constants";
+import { NAV_LINKS, SITE, cityPageUrl, vendorsUrl } from "../../../utils/constants";
 
 function FooterHeading({ children }) {
   return (
@@ -107,7 +107,7 @@ export default function Footer({ categories = [], cities = [] }) {
             {cities.map((c) => (
               <Link
                 key={c._id}
-                to={vendorsUrl({ city: c.slug })}
+                to={cityPageUrl(c.slug)}
                 className="rounded-full bg-white/50 px-3 py-1 text-xs font-medium transition-colors hover:bg-white"
               >
                 {c.name}

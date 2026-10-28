@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, MapPin } from "lucide-react";
-import { vendorsUrl } from "../../../utils/constants";
+import { cityPageUrl, vendorsUrl } from "../../../utils/constants";
 import LoadError from "../../common/components/LoadError";
 
 // "Plan by city": a chip per city, each opening that city's vendors
@@ -26,7 +26,7 @@ export default function PlanByCity({ cities }) {
                 {(cities.data ?? []).map((c) => (
                   <li key={c._id}>
                     <Link
-                      to={vendorsUrl({ city: c.slug })}
+                      to={cityPageUrl(c.slug)}
                       className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-800 transition-colors hover:border-plum hover:bg-brand-light hover:text-plum"
                     >
                       <MapPin size={14} /> {c.name}

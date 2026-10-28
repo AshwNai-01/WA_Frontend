@@ -43,6 +43,9 @@ export const HERO_SLIDES = [
   { id: "1597157639073-69284dc0fdaf", alt: "Bride and groom's hands with mehandi during the ceremony" },
 ];
 
+// City page with the Get a Quote form, e.g. /event-planner/jaipur
+export const cityPageUrl = (slug) => `/event-planner/${slug}`;
+
 // Turns API slugs into vendor listing URLs, e.g. /vendors?category=caterers
 export const vendorsUrl = ({ category, city } = {}) => {
   const params = new URLSearchParams();

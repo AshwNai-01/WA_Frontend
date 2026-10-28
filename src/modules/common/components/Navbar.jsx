@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { ChevronDown, Heart, Menu, X } from "lucide-react";
 import { NAV_LINKS, SITE, vendorsUrl } from "../../../utils/constants";
 
@@ -27,6 +27,8 @@ function Logo({ onClick }) {
 function VendorsDropdown({ categories }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
+  // Highlight like an active link while on any /vendors page
+  const isActive = useLocation().pathname.startsWith("/vendors");
 
   useEffect(() => {
     if (!open) return;
@@ -57,7 +59,9 @@ function VendorsDropdown({ categories }) {
         onClick={() => setOpen(true)}
         aria-expanded={open}
         aria-haspopup="true"
-        className="flex items-center gap-1 text-sm font-medium text-gray-900 transition-colors hover:text-plum"
+        className={`flex items-center gap-1 text-sm font-medium transition-colors hover:text-plum ${
+          isActive ? "text-plum" : "text-gray-900"
+        }`}
       >
         Vendors
         <ChevronDown size={16} className={`transition-transform ${open ? "rotate-180" : ""}`} />

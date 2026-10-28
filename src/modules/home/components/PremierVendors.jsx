@@ -1,42 +1,14 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, ChevronDown, RefreshCw, SearchX } from "lucide-react";
+import { ArrowRight, RefreshCw, SearchX } from "lucide-react";
 import useFetch from "../../../hooks/useFetch";
 import { getVendors } from "../../vendors/services/vendorApi";
 import VendorCard from "../../vendors/components/VendorCard";
 import VendorCardSkeleton from "../../vendors/components/VendorCardSkeleton";
+import FilterSelect from "../../vendors/components/FilterSelect";
 import { vendorsUrl } from "../../../utils/constants";
 
 const LIMIT = 8;
-
-function FilterSelect({ id, label, value, onChange, options, allLabel }) {
-  return (
-    <div className="w-full sm:w-56">
-      <label htmlFor={id} className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-600">
-        {label}
-      </label>
-      <div className="relative">
-        <select
-          id={id}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-full appearance-none rounded-lg border border-gray-200 bg-white py-2.5 pl-3 pr-9 text-sm font-medium text-gray-900 shadow-sm outline-none transition focus:border-plum focus:ring-2 focus:ring-plum/20"
-        >
-          <option value="">{allLabel}</option>
-          {options.map((o) => (
-            <option key={o._id} value={o.slug}>
-              {o.name}
-            </option>
-          ))}
-        </select>
-        <ChevronDown
-          size={16}
-          className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
-        />
-      </div>
-    </div>
-  );
-}
 
 // "Premier Professionals": prime vendors, filterable by city and category
 export default function PremierVendors({ categories = [], cities = [] }) {
