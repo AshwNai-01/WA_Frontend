@@ -1,7 +1,57 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, NavLink, useLocation } from "react-router-dom";
-import { ChevronDown, Heart, Menu, X } from "lucide-react";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import { ChevronDown, Heart, LayoutDashboard, LogOut, Menu, X } from "lucide-react";
 import { NAV_LINKS, SITE, vendorsUrl } from "../../../utils/constants";
+import useAuth from "../../auth/hooks/useAuth";
+
+// Login button, or Dashboard + Logout once logged in. `mobile` stacks them full width.
+function AccountActions({ mobile = false, onNavigate }) {
+  const { user, checking, logout } = useAuth();
+  const navigate = useNavigate();
+
+  // While a saved session is being checked, show nothing (avoids a "Login" flash)
+  if (checking) return mobile ? null : <span className="w-20" aria-hidden="true" />;
+
+  const pill = `rounded-full px-5 text-sm font-semibold transition-colors ${mobile ? "py-2.5 text-center" : "py-2"}`;
+
+  if (!user) {
+    return (
+      <Link to="/login" onClick={onNavigate} className={`${pill} bg-gray-900 text-white hover:bg-gray-700 ${mobile ? "mt-2" : ""}`}>
+        Login
+      </Link>
+    );
+  }
+
+  // On a protected page, ProtectedRoute sees `loggedOut` and also sends you home
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+    onNavigate?.();
+    toast.success("You've been logged out");
+  };
+
+  return (
+    <div className={mobile ? "mt-2 flex flex-col gap-2" : "flex items-center gap-2"}>
+      {user.role === "admin" && (
+        <Link
+          to="/admin"
+          onClick={onNavigate}
+          className={`${pill} inline-flex items-center justify-center gap-1.5 bg-gray-900 text-white hover:bg-gray-700`}
+        >
+          <LayoutDashboard size={16} /> Dashboard
+        </Link>
+      )}
+      <button
+        type="button"
+        onClick={handleLogout}
+        className={`${pill} inline-flex items-center justify-center gap-1.5 bg-white/60 text-gray-900 hover:bg-white`}
+      >
+        <LogOut size={16} /> Logout
+      </button>
+    </div>
+  );
+}
 
 const linkClass = ({ isActive }) =>
   `text-sm font-medium transition-colors hover:text-plum ${isActive ? "text-plum" : "text-gray-900"}`;
@@ -126,13 +176,7 @@ function MobileMenu({ categories, onClose }) {
           </div>
         )}
 
-        <Link
-          to="/login"
-          onClick={onClose}
-          className="mt-2 rounded-full bg-gray-900 px-5 py-2.5 text-center text-sm font-semibold text-white"
-        >
-          Login
-        </Link>
+        <AccountActions mobile onNavigate={onClose} />
       </nav>
     </div>
   );
@@ -158,12 +202,7 @@ export default function Navbar({ categories = [] }) {
           <NavLink to="/contact" className={linkClass}>
             Contact Us
           </NavLink>
-          <Link
-            to="/login"
-            className="rounded-full bg-gray-900 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-gray-700"
-          >
-            Login
-          </Link>
+          <AccountActions />
         </nav>
 
         <button

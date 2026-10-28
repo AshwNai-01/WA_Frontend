@@ -1,4 +1,5 @@
 import axios from "axios";
+import { AUTH_EXPIRED_EVENT, clearToken, getToken } from "./tokenStorage";
 
 // One axios instance for the whole app: every API call goes through here
 const apiClient = axios.create({
@@ -9,12 +10,8 @@ const apiClient = axios.create({
 
 // Attach the login token (if any) to every request
 apiClient.interceptors.request.use((config) => {
-  try {
-    const token = localStorage.getItem("token");
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-  } catch {
-    // localStorage can be blocked (private mode); continue without a token
-  }
+  const token = getToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
@@ -31,6 +28,13 @@ apiClient.interceptors.response.use(
       message = "Can't reach the server. Check your connection.";
     } else if (error.response.data?.message) {
       message = error.response.data.message;
+    }
+
+    // A request that carried a token was rejected as unauthenticated:
+    // the token expired or the user was removed. Log out everywhere.
+    if (error.response?.status === 401 && error.config?.headers?.Authorization) {
+      clearToken();
+      window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT));
     }
 
     const apiError = new Error(message);

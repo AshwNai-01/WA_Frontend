@@ -1,6 +1,8 @@
-import { Outlet, ScrollRestoration } from "react-router-dom";
+import { useEffect } from "react";
+import { Outlet, ScrollRestoration, useLocation } from "react-router-dom";
 import apiClient from "../../../services/apiClient";
 import useFetch from "../../../hooks/useFetch";
+import useAuth from "../../auth/hooks/useAuth";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import WhatsAppFab from "./WhatsAppFab";
@@ -10,6 +12,13 @@ import WhatsAppFab from "./WhatsAppFab";
 export default function MainLayout() {
   const categories = useFetch(() => apiClient.get("/categories"), []);
   const cities = useFetch(() => apiClient.get("/cities"), []);
+
+  // Logout sends you home; once there, clear the flag so /admin goes to /login again
+  const { pathname } = useLocation();
+  const { loggedOut, acknowledgeLogout } = useAuth();
+  useEffect(() => {
+    if (loggedOut && pathname === "/") acknowledgeLogout();
+  }, [loggedOut, pathname, acknowledgeLogout]);
 
   return (
     <div className="flex min-h-screen flex-col">
