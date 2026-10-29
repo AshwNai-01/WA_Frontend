@@ -1,7 +1,7 @@
 import useFetch from "../../../hooks/useFetch";
 import { getVendors } from "../../vendors/services/vendorApi";
 import { COMPANY_STATS } from "../../../utils/constants";
-import SectionHeading from "../../common/components/SectionHeading";
+import SectionHeading from "../../../components/SectionHeading";
 
 // "Trusted Across Rajasthan": fixed business figures plus live vendor and city counts
 export default function StatsSection({ cityCount }) {

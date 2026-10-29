@@ -1,13 +1,11 @@
 import { MessageCircle } from "lucide-react";
-import { SITE } from "../../../utils/constants";
+import { WHATSAPP_URL } from "../utils/constants";
 
 // Floating WhatsApp chat button, bottom-right on every page
 export default function WhatsAppFab() {
-  const href = `https://wa.me/${SITE.whatsappNumber}?text=${encodeURIComponent(SITE.whatsappMessage)}`;
-
   return (
     <a
-      href={href}
+      href={WHATSAPP_URL}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat with us on WhatsApp"

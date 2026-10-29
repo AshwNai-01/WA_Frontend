@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Heart, Mail, MapPin, Phone } from "lucide-react";
-import { NAV_LINKS, SITE, cityPageUrl, vendorsUrl } from "../../../utils/constants";
+import { NAV_LINKS, PHONE_HREF, SITE, cityPageUrl, vendorsUrl } from "../utils/constants";
 
 function FooterHeading({ children }) {
   return (
@@ -34,7 +34,7 @@ export default function Footer({ categories = [], cities = [] }) {
               <MapPin size={18} className="shrink-0" /> {SITE.address}
             </li>
             <li>
-              <a href={`tel:${SITE.phone.replace(/\s/g, "")}`} className="flex gap-2 hover:text-plum">
+              <a href={PHONE_HREF} className="flex gap-2 hover:text-plum">
                 <Phone size={18} className="shrink-0" /> {SITE.phone}
               </a>
             </li>

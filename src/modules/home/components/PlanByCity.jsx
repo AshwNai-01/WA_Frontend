@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, MapPin } from "lucide-react";
 import { cityPageUrl, vendorsUrl } from "../../../utils/constants";
-import LoadError from "../../common/components/LoadError";
+import LoadError from "../../../components/LoadError";
 
 // "Plan by city": a chip per city, each opening that city's vendors
 export default function PlanByCity({ cities }) {

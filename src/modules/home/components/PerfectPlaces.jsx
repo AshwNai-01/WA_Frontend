@@ -5,8 +5,8 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { vendorsUrl } from "../../../utils/constants";
-import SectionHeading from "../../common/components/SectionHeading";
-import LoadError from "../../common/components/LoadError";
+import SectionHeading from "../../../components/SectionHeading";
+import LoadError from "../../../components/LoadError";
 
 function PlaceCard({ city }) {
   const images = city.images ?? [];

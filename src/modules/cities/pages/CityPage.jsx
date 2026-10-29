@@ -1,45 +1,20 @@
-import { useEffect } from "react";
 import { Link, useOutletContext, useParams } from "react-router-dom";
 import { ArrowRight, Phone } from "lucide-react";
 import useFetch from "../../../hooks/useFetch";
+import usePageTitle from "../../../hooks/usePageTitle";
 import { getVendors } from "../../vendors/services/vendorApi";
-import VendorCard from "../../vendors/components/VendorCard";
-import VendorCardSkeleton from "../../vendors/components/VendorCardSkeleton";
+import VendorGrid from "../../vendors/components/VendorGrid";
 import QuoteForm from "../../leads/components/QuoteForm";
-import LoadError from "../../common/components/LoadError";
-import NotFoundPage from "../../common/pages/NotFoundPage";
-import { SITE, vendorsUrl } from "../../../utils/constants";
+import LoadError from "../../../components/LoadError";
+import { ButtonLink } from "../../../components/Button";
+import NotFoundPage from "../../../pages/NotFoundPage";
+import { PHONE_HREF, vendorsUrl } from "../../../utils/constants";
 
 function CityVendors({ city }) {
   const { data: vendors, pagination, loading, error, refetch } = useFetch(
     () => getVendors({ city: city.slug, limit: 6 }),
     [city.slug]
   );
-
-  let content;
-  if (error) content = <LoadError title="Couldn't load vendors" message={error} onRetry={refetch} />;
-  else if (loading && !vendors)
-    content = (
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 3 }, (_, i) => (
-          <VendorCardSkeleton key={i} />
-        ))}
-      </div>
-    );
-  else if (vendors.length === 0)
-    content = (
-      <p className="rounded-2xl bg-white px-4 py-10 text-center text-gray-600 ring-1 ring-black/5">
-        We're onboarding vendors in {city.name}. Send us a request above and we'll find the right team for you.
-      </p>
-    );
-  else
-    content = (
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {vendors.map((v) => (
-          <VendorCard key={v._id} vendor={v} />
-        ))}
-      </div>
-    );
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-14" aria-labelledby="city-vendors-heading">
@@ -48,15 +23,24 @@ function CityVendors({ city }) {
           Vendors in {city.name}
         </h2>
         {pagination?.total > 0 && (
-          <Link
-            to={vendorsUrl({ city: city.slug })}
-            className="inline-flex items-center gap-1 text-sm font-semibold text-plum hover:underline"
-          >
+          <Link to={vendorsUrl({ city: city.slug })} className="inline-flex items-center gap-1 text-sm font-semibold text-plum hover:underline">
             View all {pagination.total} <ArrowRight size={16} />
           </Link>
         )}
       </div>
-      {content}
+
+      <VendorGrid
+        vendors={vendors}
+        loading={loading}
+        error={error}
+        onRetry={refetch}
+        skeletonCount={3}
+        empty={
+          <p className="rounded-2xl bg-white px-4 py-10 text-center text-gray-600 ring-1 ring-black/5">
+            We're onboarding vendors in {city.name}. Send us a request above and we'll find the right team for you.
+          </p>
+        }
+      />
     </section>
   );
 }
@@ -67,14 +51,7 @@ export default function CityPage() {
   const { categories, cities } = useOutletContext();
   const city = cities.data?.find((c) => c.slug === slug);
 
-  useEffect(() => {
-    if (!city) return;
-    const previous = document.title;
-    document.title = `Wedding Planners in ${city.name} | Cosmical Events`;
-    return () => {
-      document.title = previous;
-    };
-  }, [city]);
+  usePageTitle(city && `Wedding Planners in ${city.name}`);
 
   if (cities.error) {
     return (
@@ -93,9 +70,7 @@ export default function CityPage() {
   return (
     <>
       <section className="relative overflow-hidden bg-gray-900">
-        {background && (
-          <img src={background} alt="" className="absolute inset-0 h-full w-full object-cover" fetchPriority="high" />
-        )}
+        {background && <img src={background} alt="" className="absolute inset-0 h-full w-full object-cover" fetchPriority="high" />}
         <div className="absolute inset-0 bg-linear-to-r from-black/75 via-black/55 to-black/30" />
 
         <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 lg:grid-cols-[1fr_minmax(0,460px)] lg:py-20">
@@ -108,14 +83,9 @@ export default function CityPage() {
               vendors. Plan your special day with our expert team.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Link
-                to={vendorsUrl({ city: city.slug })}
-                className="rounded-full bg-plum px-6 py-2.5 text-sm font-semibold text-white hover:bg-plum-dark"
-              >
-                Explore vendors in {city.name}
-              </Link>
+              <ButtonLink to={vendorsUrl({ city: city.slug })}>Explore vendors in {city.name}</ButtonLink>
               <a
-                href={`tel:${SITE.phone.replace(/\s/g, "")}`}
+                href={PHONE_HREF}
                 className="inline-flex items-center gap-2 rounded-full border border-white/70 px-6 py-2.5 text-sm font-semibold text-white hover:bg-white/10"
               >
                 <Phone size={16} /> Call Now

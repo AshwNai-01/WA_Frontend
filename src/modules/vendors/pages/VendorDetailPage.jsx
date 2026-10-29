@@ -1,13 +1,14 @@
-import { useEffect } from "react";
 import { Link, useOutletContext, useParams } from "react-router-dom";
-import { ChevronRight, Gem, IndianRupee, MapPin, Video } from "lucide-react";
+import { Gem, IndianRupee, MapPin, Video } from "lucide-react";
 import useFetch from "../../../hooks/useFetch";
+import usePageTitle from "../../../hooks/usePageTitle";
 import { getVendorBySlug, getVendors } from "../services/vendorApi";
 import VendorGallery from "../components/VendorGallery";
-import VendorCard from "../components/VendorCard";
+import VendorGrid from "../components/VendorGrid";
 import QuoteForm from "../../leads/components/QuoteForm";
-import LoadError from "../../common/components/LoadError";
-import NotFoundPage from "../../common/pages/NotFoundPage";
+import Breadcrumb from "../../../components/Breadcrumb";
+import LoadError from "../../../components/LoadError";
+import NotFoundPage from "../../../pages/NotFoundPage";
 import formatPrice from "../../../utils/formatPrice";
 import { cityPageUrl, vendorsUrl } from "../../../utils/constants";
 
@@ -27,12 +28,30 @@ function SimilarVendors({ vendor }) {
           View all
         </Link>
       </div>
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {others.map((v) => (
-          <VendorCard key={v._id} vendor={v} />
-        ))}
-      </div>
+      <VendorGrid vendors={others} />
     </section>
+  );
+}
+
+function PricingBox({ vendor }) {
+  const price = formatPrice(vendor.startingPrice);
+
+  return (
+    <div className="mt-6 rounded-2xl bg-white p-5 ring-1 ring-black/5">
+      <h2 className="flex items-center gap-2 font-body text-sm font-semibold uppercase tracking-wider text-gray-500">
+        <IndianRupee size={16} /> Pricing
+      </h2>
+      <p className="mt-2 text-2xl font-semibold text-plum">{price ? `Starting from ${price}` : "Price on request"}</p>
+      {vendor.priceRanges?.length > 0 && (
+        <ul className="mt-3 flex flex-wrap gap-2" aria-label="Packages">
+          {vendor.priceRanges.map((range) => (
+            <li key={range} className="rounded-full bg-brand-light px-3 py-1 text-sm font-medium text-plum">
+              ₹{range}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
@@ -58,14 +77,7 @@ export default function VendorDetailPage() {
   // only use data that belongs to the slug in the URL
   const vendor = data?.slug === slug ? data : null;
 
-  useEffect(() => {
-    if (!vendor) return;
-    const previous = document.title;
-    document.title = `${vendor.name} | ${vendor.category?.name ?? "Vendor"} in ${vendor.city?.name ?? "Rajasthan"}`;
-    return () => {
-      document.title = previous;
-    };
-  }, [vendor]);
+  usePageTitle(vendor && `${vendor.name}, ${vendor.category?.name ?? "Vendor"} in ${vendor.city?.name ?? "Rajasthan"}`);
 
   if (errorStatus === 404) return <NotFoundPage />;
   if (error) {
@@ -77,29 +89,16 @@ export default function VendorDetailPage() {
   }
   if (loading || !vendor) return <DetailSkeleton />;
 
-  const price = formatPrice(vendor.startingPrice);
+  const breadcrumb = [
+    { label: "Home", to: "/" },
+    { label: "Vendors", to: vendorsUrl() },
+    vendor.category && { label: vendor.category.name, to: vendorsUrl({ category: vendor.category.slug }) },
+    { label: vendor.name },
+  ].filter(Boolean);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 md:py-12">
-      <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1 text-sm text-gray-600">
-        <Link to="/" className="hover:text-plum">
-          Home
-        </Link>
-        <ChevronRight size={14} />
-        <Link to={vendorsUrl()} className="hover:text-plum">
-          Vendors
-        </Link>
-        {vendor.category && (
-          <>
-            <ChevronRight size={14} />
-            <Link to={vendorsUrl({ category: vendor.category.slug })} className="hover:text-plum">
-              {vendor.category.name}
-            </Link>
-          </>
-        )}
-        <ChevronRight size={14} />
-        <span className="text-gray-900">{vendor.name}</span>
-      </nav>
+      <Breadcrumb items={breadcrumb} />
 
       <div className="mt-6 grid gap-10 lg:grid-cols-[1fr_minmax(0,420px)]">
         <div>
@@ -130,21 +129,7 @@ export default function VendorDetailPage() {
             )}
           </div>
 
-          <div className="mt-6 rounded-2xl bg-white p-5 ring-1 ring-black/5">
-            <h2 className="flex items-center gap-2 font-body text-sm font-semibold uppercase tracking-wider text-gray-500">
-              <IndianRupee size={16} /> Pricing
-            </h2>
-            <p className="mt-2 text-2xl font-semibold text-plum">{price ? `Starting from ${price}` : "Price on request"}</p>
-            {vendor.priceRanges?.length > 0 && (
-              <ul className="mt-3 flex flex-wrap gap-2" aria-label="Packages">
-                {vendor.priceRanges.map((range) => (
-                  <li key={range} className="rounded-full bg-brand-light px-3 py-1 text-sm font-medium text-plum">
-                    ₹{range}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          <PricingBox vendor={vendor} />
 
           {vendor.description && (
             <div className="mt-6">

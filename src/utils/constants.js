@@ -17,6 +17,10 @@ export const SITE = {
   },
 };
 
+// Ready-made links for "Call" and "Chat on WhatsApp" buttons
+export const PHONE_HREF = `tel:${SITE.phone.replace(/\s/g, "")}`;
+export const WHATSAPP_URL = `https://wa.me/${SITE.whatsappNumber}?text=${encodeURIComponent(SITE.whatsappMessage)}`;
+
 // Top-level navigation. "Vendors" is a dropdown filled from the API.
 export const NAV_LINKS = [
   { label: "Home", to: "/" },

@@ -1,62 +1,47 @@
-import { useEffect, useState } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Navigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
-import { AlertCircle, Eye, EyeOff, Heart, Loader2 } from "lucide-react";
-import useAuth from "../hooks/useAuth";
+import { AlertCircle, Eye, EyeOff, Heart } from "lucide-react";
+import { useAuth } from "../AuthContext";
+import useForm from "../../../hooks/useForm";
+import usePageTitle from "../../../hooks/usePageTitle";
 import { isValidEmail } from "../../../utils/formValidation";
-import FormField, { inputClass } from "../../leads/components/FormField";
+import { Button } from "../../../components/Button";
+import { Field, TextField, errorProps, inputClass } from "../../../components/form/FormField";
 
-// Where to go after login: back to the page that sent you here, else admins -> /admin
-const destinationFor = (user, from) => from || (user.role === "admin" ? "/admin" : "/");
+const validate = ({ email, password }) => {
+  const errors = {};
+  if (!email.trim()) errors.email = "Enter your email";
+  else if (!isValidEmail(email)) errors.email = "Enter a valid email";
+  if (!password) errors.password = "Enter your password";
+  return errors;
+};
 
 export default function LoginPage() {
+  usePageTitle("Login");
   const { user, checking, login } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
-  const from = location.state?.from?.pathname;
 
-  const [form, setForm] = useState({ email: "", password: "" });
-  const [errors, setErrors] = useState({});
+  const form = useForm({ email: "", password: "" }, validate, "login");
   const [serverError, setServerError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    const previous = document.title;
-    document.title = "Login | Cosmical Events";
-    return () => {
-      document.title = previous;
-    };
-  }, []);
-
-  // Already logged in: skip the form
-  if (!checking && user && !submitting) {
-    return <Navigate to={destinationFor(user, from)} replace />;
+  // Logged in (already, or just now): go back to the page that sent you here, else admins -> /admin
+  if (!checking && user) {
+    const destination = location.state?.from?.pathname || (user.role === "admin" ? "/admin" : "/");
+    return <Navigate to={destination} replace />;
   }
-
-  const update = (field) => (e) => {
-    setForm((f) => ({ ...f, [field]: e.target.value }));
-    if (errors[field]) setErrors(({ [field]: _removed, ...rest }) => rest);
-    setServerError("");
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const found = {};
-    if (!form.email.trim()) found.email = "Enter your email";
-    else if (!isValidEmail(form.email)) found.email = "Enter a valid email";
-    if (!form.password) found.password = "Enter your password";
-    setErrors(found);
-    if (Object.keys(found).length) {
-      document.getElementById(`login-${Object.keys(found)[0]}`)?.focus();
-      return;
-    }
+    setServerError("");
+    if (!form.isValid()) return;
 
     setSubmitting(true);
     try {
-      const loggedIn = await login(form.email.trim(), form.password);
+      const loggedIn = await login(form.values.email.trim(), form.values.password);
       toast.success(`Welcome back, ${loggedIn.name.split(" ")[0]}`);
-      navigate(destinationFor(loggedIn, from), { replace: true });
     } catch (err) {
       setServerError(err.message);
       setSubmitting(false);
@@ -83,57 +68,44 @@ export default function LoginPage() {
           )}
 
           <form onSubmit={handleSubmit} noValidate className="mt-6 space-y-4">
-            <FormField id="login-email" label="Email" error={errors.email} required>
-              <input
-                type="email"
-                autoComplete="username"
-                placeholder="you@example.com"
-                value={form.email}
-                onChange={update("email")}
-                className={inputClass(errors.email)}
-              />
-            </FormField>
+            <TextField
+              id="login-email"
+              label="Email"
+              type="email"
+              autoComplete="username"
+              placeholder="you@example.com"
+              value={form.values.email}
+              onChange={form.handleChange("email")}
+              error={form.errors.email}
+              required
+            />
 
-            {/* Not FormField: its child here is a wrapper div, which must not get the input's id */}
-            <div>
-              <label htmlFor="login-password" className="mb-1 block text-xs font-semibold text-gray-700">
-                Password<span className="text-plum"> *</span>
-              </label>
+            {/* Password needs a show/hide button inside the box, so it uses Field directly */}
+            <Field id="login-password" label="Password" error={form.errors.password} required>
               <div className="relative">
                 <input
                   id="login-password"
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
-                  value={form.password}
-                  onChange={update("password")}
-                  aria-invalid={errors.password ? true : undefined}
-                  aria-describedby={errors.password ? "login-password-error" : undefined}
-                  className={`${inputClass(errors.password)} pr-11`}
+                  value={form.values.password}
+                  onChange={form.handleChange("password")}
+                  {...errorProps("login-password", form.errors.password)}
+                  className={`${inputClass(form.errors.password)} pr-11`}
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword((s) => !s)}
+                  onClick={() => setShowPassword((show) => !show)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                   className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 text-gray-500 hover:text-gray-800"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-              {errors.password && (
-                <p id="login-password-error" className="mt-1 text-xs text-red-600">
-                  {errors.password}
-                </p>
-              )}
-            </div>
+            </Field>
 
-            <button
-              type="submit"
-              disabled={submitting}
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-gray-900 py-3 text-sm font-semibold text-white transition-colors hover:bg-gray-700 disabled:opacity-70"
-            >
-              {submitting && <Loader2 size={16} className="animate-spin" />}
+            <Button type="submit" variant="dark" loading={submitting} className="w-full py-3">
               {submitting ? "Logging in…" : "Log in"}
-            </button>
+            </Button>
           </form>
         </div>
         <p className="mt-4 text-center text-xs text-gray-500">Accounts are created by the Cosmical Events team.</p>

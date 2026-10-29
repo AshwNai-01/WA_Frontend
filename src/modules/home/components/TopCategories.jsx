@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { vendorsUrl } from "../../../utils/constants";
-import SectionHeading from "../../common/components/SectionHeading";
-import LoadError from "../../common/components/LoadError";
+import SectionHeading from "../../../components/SectionHeading";
+import LoadError from "../../../components/LoadError";
 
 // Label colour per card, cycling, like the coloured tags in the original design
 const ACCENTS = [
